@@ -24,10 +24,3 @@ var invalidConfigError = errgo.New("invalid config")
 func IsInvalidConfig(err error) bool {
 	return errgo.Cause(err) == invalidConfigError
 }
-
-var invalidDomainError = errgo.New("invalid domain")
-
-// IsInvalidDomain asserts invalidDomainError.
-func IsInvalidDomain(err error) bool {
-	return errgo.Cause(err) == invalidDomainError
-}
