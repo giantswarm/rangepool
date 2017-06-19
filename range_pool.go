@@ -232,17 +232,26 @@ func (s *Service) delete(ctx context.Context, namespace, ID string, items []int)
 		i := strconv.Itoa(item)
 
 		err := s.storage.Delete(ctx, fmt.Sprintf(ItemKeyFormat, namespace, i))
-		if err != nil {
+		if microstorage.IsNotFound(err) {
+			// In case there is no item anymore, we just go ahead to delete the rest
+			// of the data.
+		} else if err != nil {
 			return microerror.MaskAny(err)
 		}
 		err = s.storage.Delete(ctx, fmt.Sprintf(IDKeyFormat, namespace, ID, i))
-		if err != nil {
+		if microstorage.IsNotFound(err) {
+			// In case there is no item anymore, we just go ahead to delete the rest
+			// of the data.
+		} else if err != nil {
 			return microerror.MaskAny(err)
 		}
 	}
 
 	err := s.storage.Delete(ctx, fmt.Sprintf(IDListKeyFormat, namespace, ID))
-	if err != nil {
+	if microstorage.IsNotFound(err) {
+		// In case there is no item anymore, we just go ahead to delete the rest of
+		// the data.
+	} else if err != nil {
 		return microerror.MaskAny(err)
 	}
 
@@ -255,11 +264,17 @@ func (s *Service) delete(ctx context.Context, namespace, ID string, items []int)
 	}
 	if len(list) == 0 {
 		err := s.storage.Delete(ctx, fmt.Sprintf(ItemListKeyFormat, namespace))
-		if err != nil {
+		if microstorage.IsNotFound(err) {
+			// In case there is no item anymore, we just go ahead to delete the rest
+			// of the data.
+		} else if err != nil {
 			return microerror.MaskAny(err)
 		}
 		err = s.storage.Delete(ctx, fmt.Sprintf(LatestKeyFormat, namespace))
-		if err != nil {
+		if microstorage.IsNotFound(err) {
+			// In case there is no item anymore, we just go ahead to delete the rest
+			// of the data.
+		} else if err != nil {
 			return microerror.MaskAny(err)
 		}
 	}
