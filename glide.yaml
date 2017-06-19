@@ -1,0 +1,4 @@
+package: github.com/giantswarm/rangepool
+import:
+- package: github.com/giantswarm/microkit
+- package: github.com/juju/errgo
