@@ -46,8 +46,8 @@ const (
 
 const (
 	// latestItemException indicates there was no latest range pool item, which
-	// means that there has no item ever been before. In this case the range pool
-	// is completely new and about to be used the very first time.
+	// means there has never been an item before. In this case the range pool is
+	// completely new and about to be used the very first time.
 	latestItemException = -1
 )
 
@@ -88,7 +88,7 @@ func DefaultConfig() Config {
 	}
 }
 
-// New creates a new configured creator service.
+// New creates a new configured range pool.
 func New(config Config) (*Service, error) {
 	// Dependencies.
 	if config.Logger == nil {

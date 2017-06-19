@@ -80,7 +80,7 @@ func Test_Service_Create_NumOne(t *testing.T) {
 		}
 	}
 
-	// Fech a new item. This should be the same as the very first one of the test
+	// Fetch a new item. This should be the same as the very first one of the test
 	// because we deleted all references created so far in the former step.
 	{
 		items, err := newService.Create(ctx, namespace, ID, num, min, max)
@@ -155,7 +155,7 @@ func Test_Service_Create_Num3_CapacityReached(t *testing.T) {
 		}
 	}
 
-	// Fech new items again. This should throw an error since the capacity of
+	// Fetch new items again. This should throw an error since the capacity of
 	// available items should be reached.
 	{
 		_, err := newService.Create(ctx, namespace, ID, num, min, max)
@@ -246,7 +246,7 @@ func Test_Service_Create_NumTwo(t *testing.T) {
 		}
 	}
 
-	// Fech the new items. These should be the same as the very first ones of the
+	// Fetch the new items. These should be the same as the very first ones of the
 	// test because we deleted all references created so far in the former step.
 	{
 		items, err := newService.Create(ctx, namespace, ID, num, min, max)
@@ -351,8 +351,9 @@ func Test_Service_Create_NumTwo_DifferentIDs(t *testing.T) {
 			}
 		}
 
-		// Fech the new items. These should be the same as the very first ones of the
-		// test because we deleted all references created so far in the former step.
+		// Fetch the new items. These should be the same as the very first ones of
+		// the test because we deleted all references created so far in the former
+		// step.
 		{
 			items, err := newService.Create(ctx, namespace, ID, num, min, max)
 			if err != nil {
