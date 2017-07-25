@@ -1,12 +1,8 @@
-hash: 9443a4f21afb61cfb355a0351b8d32f0c819d4d0c9984050f00b27b25325e38b
-updated: 2017-06-17T17:40:29.600333703+02:00
+hash: 4d0ba40a1f249a17c354bd58e0d3860d1b2fb544b775690941dbbd8457da705d
+updated: 2017-07-25T15:52:28.545106664+02:00
 imports:
-- name: github.com/beorn7/perks
-  version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
-  subpackages:
-  - quantile
 - name: github.com/coreos/etcd
-  version: 0f4a535c2fb7a2920e13e2e19b9eaf6b2e9285e5
+  version: 61fc123e7a8b14a0a258aa3f5c4159861b1ec2e7
   subpackages:
   - auth/authpb
   - client
@@ -15,12 +11,15 @@ imports:
   - etcdserver/etcdserverpb
   - mvcc/mvccpb
   - pkg/pathutil
-  - pkg/tlsutil
+  - pkg/srv
   - pkg/types
-- name: github.com/ghodss/yaml
-  version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
+  - version
+- name: github.com/coreos/go-semver
+  version: 8ab6407b697782a06568d4b7f1db25550ec2e4c6
+  subpackages:
+  - semver
 - name: github.com/giantswarm/microkit
-  version: 1ac51fb9905e0c7ab5a8d12fec127c6fbfd75aac
+  version: c2f273484a749a94402dc3cfbd02913f57995484
   subpackages:
   - error
   - logger
@@ -30,7 +29,7 @@ imports:
   - storage/memory
   - tls
 - name: github.com/go-kit/kit
-  version: f66b0e13579bfc5a48b9e2a94b1209c107ea1f41
+  version: a9ca6725cbbea455e61c6bc8a1ed28e81eb3493b
   subpackages:
   - endpoint
   - log
@@ -38,53 +37,22 @@ imports:
 - name: github.com/go-logfmt/logfmt
   version: 390ab7935ee28ec6b286364bba9b4dd6410cb3d5
 - name: github.com/go-stack/stack
-  version: 7a2f19628aabfe68f0766b59e74d6315f8347d22
+  version: 54be5f394ed2c3e19dac9134a40a95ba5a017f7b
 - name: github.com/golang/protobuf
   version: 4bd1920723d7b7c925de087aa32e2187708897f7
   subpackages:
   - jsonpb
   - proto
-- name: github.com/grpc-ecosystem/go-grpc-prometheus
-  version: 6b7015e65d366bf3f19b2b2a000a831940f0f7e0
-- name: github.com/grpc-ecosystem/grpc-gateway
-  version: 84398b94e188ee336f307779b57b3aa91af7063c
-  subpackages:
-  - runtime
-  - runtime/internal
-  - utilities
 - name: github.com/juju/errgo
   version: 08cceb5d0b5331634b9826762a8fd53b29b86ad8
 - name: github.com/kr/logfmt
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
-- name: github.com/matttproud/golang_protobuf_extensions
-  version: c12348ce28de40eed0136aa2b644d0ee0650e56c
-  subpackages:
-  - pbutil
-- name: github.com/prometheus/client_golang
-  version: c5b7fccd204277076155f10851dad72b76a49317
-  subpackages:
-  - prometheus
-  - prometheus/promhttp
-- name: github.com/prometheus/client_model
-  version: 6f3806018612930941127f2a7c6c453ba2c527d2
-  subpackages:
-  - go
-- name: github.com/prometheus/common
-  version: 0d0c3d572886e0f2323ed376557f9eb99b97d25b
-  subpackages:
-  - expfmt
-  - internal/bitbucket.org/ww/goautoneg
-  - model
-- name: github.com/prometheus/procfs
-  version: a3bfc74126ea9e45ee5d5c6f7fc86191b7d488fb
-  subpackages:
-  - xfs
 - name: github.com/ugorji/go
   version: ded73eae5db7e7a0ef6f55aace87a2873c5d2b74
   subpackages:
   - codec
 - name: golang.org/x/net
-  version: f2499483f923065a842d38eb4c7f1927e6fc6e6d
+  version: c8c74377599bd978aee1cf3b9b63a8634051cec2
   subpackages:
   - context
   - http2
@@ -93,17 +61,25 @@ imports:
   - internal/timeseries
   - lex/httplex
   - trace
+- name: golang.org/x/text
+  version: 4ee4af566555f5fbe026368b75596286a312663a
+  subpackages:
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/norm
 - name: google.golang.org/grpc
-  version: 777daa17ff9b5daef1cfdf915088a2ada3332bf0
+  version: 8050b9cbc271307e5a716a9d782803d09b0d6f2d
   subpackages:
   - codes
   - credentials
   - grpclog
   - internal
+  - keepalive
   - metadata
   - naming
   - peer
+  - stats
+  - tap
   - transport
-- name: gopkg.in/yaml.v2
-  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
 testImports: []
