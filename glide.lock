@@ -1,8 +1,8 @@
-hash: 4d0ba40a1f249a17c354bd58e0d3860d1b2fb544b775690941dbbd8457da705d
-updated: 2017-07-25T15:52:28.545106664+02:00
+hash: 180699ee478ed61f71b0bd7d612c8007953e4c7d1230e7c021c23222f83c17e1
+updated: 2017-07-25T16:32:27.35158305+02:00
 imports:
 - name: github.com/coreos/etcd
-  version: 61fc123e7a8b14a0a258aa3f5c4159861b1ec2e7
+  version: c31bec0f29facff13f7c3e3d948e55dd6689ed42
   subpackages:
   - auth/authpb
   - client
@@ -19,7 +19,7 @@ imports:
   subpackages:
   - semver
 - name: github.com/giantswarm/microkit
-  version: c2f273484a749a94402dc3cfbd02913f57995484
+  version: 396a94432e278c8f6f0df7f7186c1c21b39fb12b
   subpackages:
   - error
   - logger

@@ -186,11 +186,29 @@ func (e *Etcd) Config() Config {
 func (e *Etcd) Close() {
 	e.closeOnce.Do(func() { close(e.stopc) })
 
-	// (gRPC server) stops accepting new connections,
-	// RPCs, and blocks until all pending RPCs are finished
+	timeout := 2 * time.Second
+	if e.Server != nil {
+		timeout = e.Server.Cfg.ReqTimeout()
+	}
 	for _, sctx := range e.sctxs {
 		for gs := range sctx.grpcServerC {
-			gs.GracefulStop()
+			ch := make(chan struct{})
+			go func() {
+				defer close(ch)
+				// close listeners to stop accepting new connections,
+				// will block on any existing transports
+				gs.GracefulStop()
+			}()
+			// wait until all pending RPCs are finished
+			select {
+			case <-ch:
+			case <-time.After(timeout):
+				// took too long, manually close open transports
+				// e.g. watch streams
+				gs.Stop()
+				// concurrent GracefulStop should be interrupted
+				<-ch
+			}
 		}
 	}
 
@@ -326,6 +344,9 @@ func startClientListeners(cfg *Config) (sctxs map[string]*serveCtx, err error) {
 		if sctx.l, err = net.Listen(proto, addr); err != nil {
 			return nil, err
 		}
+		// net.Listener will rewrite ipv4 0.0.0.0 to ipv6 [::], breaking
+		// hosts that disable ipv6. So, use the address given by the user.
+		sctx.addr = addr
 
 		if fdLimit, fderr := runtimeutil.FDLimit(); fderr == nil {
 			if fdLimit <= reservedInternalFDNum {

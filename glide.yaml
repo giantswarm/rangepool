@@ -1,4 +1,11 @@
 package: github.com/giantswarm/rangepool
 import:
 - package: github.com/giantswarm/microkit
-  version: master
+  version: dep
+  subpackages:
+  - error
+  - logger
+  - storage
+# For etcd.
+- package: golang.org/x/text
+  version: 4ee4af566555f5fbe026368b75596286a312663a
