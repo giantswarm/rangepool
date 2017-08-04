@@ -7,8 +7,8 @@ import (
 	"strconv"
 
 	"github.com/giantswarm/microerror"
-	"github.com/giantswarm/micrologger"
 	microstorage "github.com/giantswarm/microkit/storage"
+	"github.com/giantswarm/micrologger"
 )
 
 const (
