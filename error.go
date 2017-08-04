@@ -1,26 +1,26 @@
 package rangepool
 
 import (
-	"github.com/juju/errgo"
+	"github.com/giantswarm/microerror"
 )
 
-var capacityReachedError = errgo.New("capacity reached")
+var capacityReachedError = microerror.New("capacity reached")
 
 // IsCapacityReached asserts capacityReachedError.
 func IsCapacityReached(err error) bool {
-	return errgo.Cause(err) == capacityReachedError
+	return microerror.Cause(err) == capacityReachedError
 }
 
-var executionFailedError = errgo.New("execution failed")
+var executionFailedError = microerror.New("execution failed")
 
 // IsExecutionFailed asserts executionFailedError.
 func IsExecutionFailed(err error) bool {
-	return errgo.Cause(err) == executionFailedError
+	return microerror.Cause(err) == executionFailedError
 }
 
-var invalidConfigError = errgo.New("invalid config")
+var invalidConfigError = microerror.New("invalid config")
 
 // IsInvalidConfig asserts invalidConfigError.
 func IsInvalidConfig(err error) bool {
-	return errgo.Cause(err) == invalidConfigError
+	return microerror.Cause(err) == invalidConfigError
 }
