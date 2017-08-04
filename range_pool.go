@@ -6,9 +6,9 @@ import (
 	"sort"
 	"strconv"
 
-	microerror "github.com/giantswarm/microkit/error"
-	micrologger "github.com/giantswarm/microkit/logger"
+	"github.com/giantswarm/microerror"
 	microstorage "github.com/giantswarm/microkit/storage"
+	"github.com/giantswarm/micrologger"
 )
 
 const (
@@ -92,10 +92,10 @@ func DefaultConfig() Config {
 func New(config Config) (*Service, error) {
 	// Dependencies.
 	if config.Logger == nil {
-		return nil, microerror.MaskAnyf(invalidConfigError, "logger must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "logger must not be empty")
 	}
 	if config.Storage == nil {
-		return nil, microerror.MaskAnyf(invalidConfigError, "storage must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "storage must not be empty")
 	}
 
 	newService := &Service{
@@ -126,11 +126,11 @@ func (s *Service) Create(ctx context.Context, namespace, ID string, num, min, ma
 			// In case there is no item yet, we create and persist the first ones
 			// using the algorithm invoked below.
 		} else if err != nil {
-			return nil, microerror.MaskAny(err)
+			return nil, microerror.Mask(err)
 		}
 		used, err = stringsToInts(v)
 		if err != nil {
-			return nil, microerror.MaskAny(err)
+			return nil, microerror.Mask(err)
 		}
 	}
 
@@ -143,12 +143,12 @@ func (s *Service) Create(ctx context.Context, namespace, ID string, num, min, ma
 			// This indicates the first item for the algorithm being invoked below.
 			l = strconv.Itoa(latestItemException)
 		} else if err != nil {
-			return nil, microerror.MaskAny(err)
+			return nil, microerror.Mask(err)
 		}
 
 		latest, err = strconv.Atoi(l)
 		if err != nil {
-			return nil, microerror.MaskAny(err)
+			return nil, microerror.Mask(err)
 		}
 	}
 
@@ -158,7 +158,7 @@ func (s *Service) Create(ctx context.Context, namespace, ID string, num, min, ma
 		for i := 0; i < num; i++ {
 			item, err := nextItem(used, min, max, latest)
 			if err != nil {
-				return nil, microerror.MaskAny(err)
+				return nil, microerror.Mask(err)
 			}
 			items = append(items, item)
 			used = append(used, item)
@@ -166,7 +166,7 @@ func (s *Service) Create(ctx context.Context, namespace, ID string, num, min, ma
 
 		err = s.create(ctx, namespace, ID, items)
 		if err != nil {
-			return nil, microerror.MaskAny(err)
+			return nil, microerror.Mask(err)
 		}
 	}
 
@@ -181,17 +181,17 @@ func (s *Service) Delete(ctx context.Context, namespace, ID string) error {
 			// In case there is no item yet, we create and persist the first ones
 			// using the algorithm invoked below.
 		} else if err != nil {
-			return microerror.MaskAny(err)
+			return microerror.Mask(err)
 		}
 		items, err = stringsToInts(v)
 		if err != nil {
-			return microerror.MaskAny(err)
+			return microerror.Mask(err)
 		}
 	}
 
 	err := s.delete(ctx, namespace, ID, items)
 	if err != nil {
-		return microerror.MaskAny(err)
+		return microerror.Mask(err)
 	}
 
 	return nil
@@ -206,13 +206,13 @@ func (s *Service) create(ctx context.Context, namespace, ID string, items []int)
 		// item to be able to list all of the items later.
 		err := s.storage.Create(ctx, fmt.Sprintf(ItemKeyFormat, namespace, i), i)
 		if err != nil {
-			return microerror.MaskAny(err)
+			return microerror.Mask(err)
 		}
 		// We store the relationship between the ID and its corresponding item to be
 		// able to delete it later based on the ID.
 		err = s.storage.Create(ctx, fmt.Sprintf(IDKeyFormat, namespace, ID, i), i)
 		if err != nil {
-			return microerror.MaskAny(err)
+			return microerror.Mask(err)
 		}
 	}
 
@@ -221,7 +221,7 @@ func (s *Service) create(ctx context.Context, namespace, ID string, items []int)
 	lastItem := strconv.Itoa(items[len(items)-1])
 	err := s.storage.Create(ctx, fmt.Sprintf(LatestKeyFormat, namespace), lastItem)
 	if err != nil {
-		return microerror.MaskAny(err)
+		return microerror.Mask(err)
 	}
 
 	return nil
@@ -236,14 +236,14 @@ func (s *Service) delete(ctx context.Context, namespace, ID string, items []int)
 			// In case there is no item anymore, we just go ahead to delete the rest
 			// of the data.
 		} else if err != nil {
-			return microerror.MaskAny(err)
+			return microerror.Mask(err)
 		}
 		err = s.storage.Delete(ctx, fmt.Sprintf(IDKeyFormat, namespace, ID, i))
 		if microstorage.IsNotFound(err) {
 			// In case there is no item anymore, we just go ahead to delete the rest
 			// of the data.
 		} else if err != nil {
-			return microerror.MaskAny(err)
+			return microerror.Mask(err)
 		}
 	}
 
@@ -252,7 +252,7 @@ func (s *Service) delete(ctx context.Context, namespace, ID string, items []int)
 		// In case there is no item anymore, we just go ahead to delete the rest of
 		// the data.
 	} else if err != nil {
-		return microerror.MaskAny(err)
+		return microerror.Mask(err)
 	}
 
 	list, err := s.storage.List(ctx, fmt.Sprintf(ItemListKeyFormat, namespace))
@@ -260,7 +260,7 @@ func (s *Service) delete(ctx context.Context, namespace, ID string, items []int)
 		// In case there is no item anymore, we just go ahead to delete the complete
 		// item list key and latest item key.
 	} else if err != nil {
-		return microerror.MaskAny(err)
+		return microerror.Mask(err)
 	}
 	if len(list) == 0 {
 		err := s.storage.Delete(ctx, fmt.Sprintf(ItemListKeyFormat, namespace))
@@ -268,14 +268,14 @@ func (s *Service) delete(ctx context.Context, namespace, ID string, items []int)
 			// In case there is no item anymore, we just go ahead to delete the rest
 			// of the data.
 		} else if err != nil {
-			return microerror.MaskAny(err)
+			return microerror.Mask(err)
 		}
 		err = s.storage.Delete(ctx, fmt.Sprintf(LatestKeyFormat, namespace))
 		if microstorage.IsNotFound(err) {
 			// In case there is no item anymore, we just go ahead to delete the rest
 			// of the data.
 		} else if err != nil {
-			return microerror.MaskAny(err)
+			return microerror.Mask(err)
 		}
 	}
 
@@ -293,19 +293,19 @@ func (s *Service) delete(ctx context.Context, namespace, ID string, items []int)
 // being created by the range pool.
 func nextItem(used []int, min, max, latest int) (int, error) {
 	if min <= -1 {
-		return 0, microerror.MaskAnyf(executionFailedError, "min must be negative")
+		return 0, microerror.Maskf(executionFailedError, "min must be negative")
 	}
 	if max <= -1 {
-		return 0, microerror.MaskAnyf(executionFailedError, "max must be negative")
+		return 0, microerror.Maskf(executionFailedError, "max must be negative")
 	}
 	if min >= max {
-		return 0, microerror.MaskAnyf(executionFailedError, "min must be greater than max")
+		return 0, microerror.Maskf(executionFailedError, "min must be greater than max")
 	}
 	if latest != latestItemException && latest < min {
-		return 0, microerror.MaskAnyf(executionFailedError, "latest must not be lower than min")
+		return 0, microerror.Maskf(executionFailedError, "latest must not be lower than min")
 	}
 	if latest != latestItemException && latest > max {
-		return 0, microerror.MaskAnyf(executionFailedError, "latest must not be greater than max")
+		return 0, microerror.Maskf(executionFailedError, "latest must not be greater than max")
 	}
 
 	sort.Ints(used)
@@ -338,7 +338,7 @@ func nextItem(used []int, min, max, latest int) (int, error) {
 		return nextItem, nil
 	}
 
-	return 0, microerror.MaskAnyf(capacityReachedError, "cannot find next item")
+	return 0, microerror.Maskf(capacityReachedError, "cannot find next item")
 }
 
 func containsInt(list []int, item int) bool {
@@ -359,7 +359,7 @@ func stringsToInts(list []string) ([]int, error) {
 	for _, l := range list {
 		s, err := strconv.Atoi(l)
 		if err != nil {
-			return nil, microerror.MaskAny(err)
+			return nil, microerror.Mask(err)
 		}
 
 		converted = append(converted, s)
