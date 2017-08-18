@@ -1,35 +1,14 @@
-hash: f958fea86a6b230a4cce3a6a07c7dc68d1d725a854c130103f00ef4c376ecd92
-updated: 2017-08-04T16:27:25.889990287+02:00
+hash: 0edc944b1d150ed7c7cd6701718ac3094bb1850d9c53d89d460f56f18b9ab4ce
+updated: 2017-08-18T11:10:46.136570377+01:00
 imports:
-- name: github.com/coreos/etcd
-  version: 61fc123e7a8b14a0a258aa3f5c4159861b1ec2e7
-  subpackages:
-  - auth/authpb
-  - client
-  - clientv3
-  - etcdserver/api/v3rpc/rpctypes
-  - etcdserver/etcdserverpb
-  - mvcc/mvccpb
-  - pkg/pathutil
-  - pkg/srv
-  - pkg/types
-  - version
-- name: github.com/coreos/go-semver
-  version: 8ab6407b697782a06568d4b7f1db25550ec2e4c6
-  subpackages:
-  - semver
 - name: github.com/giantswarm/microerror
   version: 5ade94eb4ee35ef72eb9382228470caeddb29989
 - name: github.com/giantswarm/microkit
   version: 2d2b437193ccf7fc29e78d3654cfc6a305533001
-  subpackages:
-  - storage
-  - storage/etcd
-  - storage/etcdv2
-  - storage/memory
-  - tls
 - name: github.com/giantswarm/micrologger
-  version: 3fc80a5b178fd25a757c8bbe54599b21b11a1110
+  version: 8a69b2ab80ba2d0bd40d609206518fefacfc8fdf
+- name: github.com/giantswarm/microstorage
+  version: f004c723f0583e85f0cf24031af1404c2d5c6005
 - name: github.com/go-kit/kit
   version: a9ca6725cbbea455e61c6bc8a1ed28e81eb3493b
   subpackages:
@@ -37,49 +16,9 @@ imports:
 - name: github.com/go-logfmt/logfmt
   version: 390ab7935ee28ec6b286364bba9b4dd6410cb3d5
 - name: github.com/go-stack/stack
-  version: 54be5f394ed2c3e19dac9134a40a95ba5a017f7b
-- name: github.com/golang/protobuf
-  version: 4bd1920723d7b7c925de087aa32e2187708897f7
-  subpackages:
-  - jsonpb
-  - proto
+  version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/juju/errgo
   version: 08cceb5d0b5331634b9826762a8fd53b29b86ad8
 - name: github.com/kr/logfmt
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
-- name: github.com/ugorji/go
-  version: ded73eae5db7e7a0ef6f55aace87a2873c5d2b74
-  subpackages:
-  - codec
-- name: golang.org/x/net
-  version: c8c74377599bd978aee1cf3b9b63a8634051cec2
-  subpackages:
-  - context
-  - http2
-  - http2/hpack
-  - idna
-  - internal/timeseries
-  - lex/httplex
-  - trace
-- name: golang.org/x/text
-  version: 4ee4af566555f5fbe026368b75596286a312663a
-  subpackages:
-  - secure/bidirule
-  - transform
-  - unicode/bidi
-  - unicode/norm
-- name: google.golang.org/grpc
-  version: 8050b9cbc271307e5a716a9d782803d09b0d6f2d
-  subpackages:
-  - codes
-  - credentials
-  - grpclog
-  - internal
-  - keepalive
-  - metadata
-  - naming
-  - peer
-  - stats
-  - tap
-  - transport
 testImports: []

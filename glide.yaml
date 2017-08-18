@@ -6,3 +6,5 @@ import:
   version: master
 - package: github.com/giantswarm/microkit
   version: master
+- package: github.com/giantswarm/microstorage
+  version: master
