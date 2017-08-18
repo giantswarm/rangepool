@@ -4,22 +4,24 @@ import (
 	"context"
 	"testing"
 
-	microstorage "github.com/giantswarm/microkit/storage"
+	"github.com/giantswarm/micrologger/microloggertest"
+	"github.com/giantswarm/microstorage"
+	"github.com/giantswarm/microstorage/memory"
 )
 
 func Test_Service_Create_NumOne(t *testing.T) {
 	// Create a new storage and service.
 	var err error
 	var newService *Service
-	var newStorage microstorage.Service
+	var newStorage microstorage.Storage
 	{
-		storageConfig := microstorage.DefaultConfig()
-		newStorage, err = microstorage.New(storageConfig)
+		newStorage, err = memory.New(memory.DefaultConfig())
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
 
 		config := DefaultConfig()
+		config.Logger = microloggertest.New()
 		config.Storage = newStorage
 		newService, err = New(config)
 		if err != nil {
@@ -104,15 +106,15 @@ func Test_Service_Create_Num3_CapacityReached(t *testing.T) {
 	// Create a new storage and service.
 	var err error
 	var newService *Service
-	var newStorage microstorage.Service
+	var newStorage microstorage.Storage
 	{
-		storageConfig := microstorage.DefaultConfig()
-		newStorage, err = microstorage.New(storageConfig)
+		newStorage, err = memory.New(memory.DefaultConfig())
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
 
 		config := DefaultConfig()
+		config.Logger = microloggertest.New()
 		config.Storage = newStorage
 		newService, err = New(config)
 		if err != nil {
@@ -169,15 +171,15 @@ func Test_Service_Create_NumTwo(t *testing.T) {
 	// Create a new storage and service.
 	var err error
 	var newService *Service
-	var newStorage microstorage.Service
+	var newStorage microstorage.Storage
 	{
-		storageConfig := microstorage.DefaultConfig()
-		newStorage, err = microstorage.New(storageConfig)
+		newStorage, err = memory.New(memory.DefaultConfig())
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
 
 		config := DefaultConfig()
+		config.Logger = microloggertest.New()
 		config.Storage = newStorage
 		newService, err = New(config)
 		if err != nil {
@@ -274,15 +276,15 @@ func Test_Service_Create_NumTwo_DifferentIDs(t *testing.T) {
 	// Create a new storage and service.
 	var err error
 	var newService *Service
-	var newStorage microstorage.Service
+	var newStorage microstorage.Storage
 	{
-		storageConfig := microstorage.DefaultConfig()
-		newStorage, err = microstorage.New(storageConfig)
+		newStorage, err = memory.New(memory.DefaultConfig())
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
 
 		config := DefaultConfig()
+		config.Logger = microloggertest.New()
 		config.Storage = newStorage
 		newService, err = New(config)
 		if err != nil {

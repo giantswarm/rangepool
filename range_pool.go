@@ -7,8 +7,8 @@ import (
 	"strconv"
 
 	"github.com/giantswarm/microerror"
-	microstorage "github.com/giantswarm/microkit/storage"
 	"github.com/giantswarm/micrologger"
+	"github.com/giantswarm/microstorage"
 )
 
 const (
@@ -55,36 +55,16 @@ const (
 type Config struct {
 	// Dependencies.
 	Logger  micrologger.Logger
-	Storage microstorage.Service
+	Storage microstorage.Storage
 }
 
 // DefaultConfig provides a default configuration to create a new range pool by
 // best effort.
 func DefaultConfig() Config {
-	var err error
-
-	var newLogger micrologger.Logger
-	{
-		config := micrologger.DefaultConfig()
-		newLogger, err = micrologger.New(config)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	var newStorage microstorage.Service
-	{
-		config := microstorage.DefaultConfig()
-		newStorage, err = microstorage.New(config)
-		if err != nil {
-			panic(err)
-		}
-	}
-
 	return Config{
 		// Dependencies.
-		Logger:  newLogger,
-		Storage: newStorage,
+		Logger:  nil,
+		Storage: nil,
 	}
 }
 
@@ -110,7 +90,7 @@ func New(config Config) (*Service, error) {
 type Service struct {
 	// Dependencies.
 	logger  micrologger.Logger
-	storage microstorage.Service
+	storage microstorage.Storage
 }
 
 func (s *Service) Create(ctx context.Context, namespace, ID string, num, min, max int) ([]int, error) {
