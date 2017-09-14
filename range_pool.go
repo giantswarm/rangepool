@@ -101,14 +101,18 @@ func (s *Service) Create(ctx context.Context, namespace, ID string, num, min, ma
 	// there might be gaps, because items are freed and removed from the list.
 	var used []int
 	{
-		v, err := s.storage.List(ctx, fmt.Sprintf(ItemListKeyFormat, namespace))
+		k, err := microstorage.NewK(fmt.Sprintf(ItemListKeyFormat, namespace))
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+		kv, err := s.storage.List(ctx, k)
 		if microstorage.IsNotFound(err) {
 			// In case there is no item yet, we create and persist the first ones
 			// using the algorithm invoked below.
 		} else if err != nil {
 			return nil, microerror.Mask(err)
 		}
-		used, err = stringsToInts(v)
+		used, err = valuesToInts(kv)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -117,19 +121,24 @@ func (s *Service) Create(ctx context.Context, namespace, ID string, num, min, ma
 	// Fetch the latest item used.
 	var latest int
 	{
-		l, err := s.storage.Search(ctx, fmt.Sprintf(LatestKeyFormat, namespace))
-		if microstorage.IsNotFound(err) {
-			// In case there is no latest item yet, we set it to the special case -1.
-			// This indicates the first item for the algorithm being invoked below.
-			l = strconv.Itoa(latestItemException)
-		} else if err != nil {
-			return nil, microerror.Mask(err)
-		}
-
-		latest, err = strconv.Atoi(l)
+		k, err := microstorage.NewK(fmt.Sprintf(LatestKeyFormat, namespace))
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
+		kv, err := s.storage.Search(ctx, k)
+		if microstorage.IsNotFound(err) {
+			// In case there is no latest item yet, we set it to the special case -1.
+			// This indicates the first item for the algorithm being invoked below.
+			latest = latestItemException
+		} else if err != nil {
+			return nil, microerror.Mask(err)
+		} else {
+			latest, err = strconv.Atoi(kv.Val())
+			if err != nil {
+				return nil, microerror.Mask(err)
+			}
+		}
+
 	}
 
 	// Find and persist the next items.
@@ -156,14 +165,18 @@ func (s *Service) Create(ctx context.Context, namespace, ID string, num, min, ma
 func (s *Service) Delete(ctx context.Context, namespace, ID string) error {
 	var items []int
 	{
-		v, err := s.storage.List(ctx, fmt.Sprintf(IDListKeyFormat, namespace, ID))
+		k, err := microstorage.NewK(fmt.Sprintf(IDListKeyFormat, namespace, ID))
+		if err != nil {
+			return microerror.Mask(err)
+		}
+		kv, err := s.storage.List(ctx, k)
 		if microstorage.IsNotFound(err) {
 			// In case there is no item yet, we create and persist the first ones
 			// using the algorithm invoked below.
 		} else if err != nil {
 			return microerror.Mask(err)
 		}
-		items, err = stringsToInts(v)
+		items, err = valuesToInts(kv)
 		if err != nil {
 			return microerror.Mask(err)
 		}
@@ -184,13 +197,23 @@ func (s *Service) create(ctx context.Context, namespace, ID string, items []int)
 
 		// We store the relationship between the namespace and its corresponding
 		// item to be able to list all of the items later.
-		err := s.storage.Create(ctx, fmt.Sprintf(ItemKeyFormat, namespace, i), i)
+		kv1, err := microstorage.NewKV(fmt.Sprintf(ItemKeyFormat, namespace, i), i)
 		if err != nil {
 			return microerror.Mask(err)
 		}
+
 		// We store the relationship between the ID and its corresponding item to be
 		// able to delete it later based on the ID.
-		err = s.storage.Create(ctx, fmt.Sprintf(IDKeyFormat, namespace, ID, i), i)
+		kv2, err := microstorage.NewKV(fmt.Sprintf(IDKeyFormat, namespace, ID, i), i)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		err = s.storage.Put(ctx, kv1)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+		err = s.storage.Put(ctx, kv2)
 		if err != nil {
 			return microerror.Mask(err)
 		}
@@ -199,7 +222,11 @@ func (s *Service) create(ctx context.Context, namespace, ID string, items []int)
 	// We store the latest item to have a pointer from which we can derive the
 	// next item to use.
 	lastItem := strconv.Itoa(items[len(items)-1])
-	err := s.storage.Create(ctx, fmt.Sprintf(LatestKeyFormat, namespace), lastItem)
+	kv, err := microstorage.NewKV(fmt.Sprintf(LatestKeyFormat, namespace), lastItem)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+	err = s.storage.Put(ctx, kv)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -211,14 +238,22 @@ func (s *Service) delete(ctx context.Context, namespace, ID string, items []int)
 	for _, item := range items {
 		i := strconv.Itoa(item)
 
-		err := s.storage.Delete(ctx, fmt.Sprintf(ItemKeyFormat, namespace, i))
+		k, err := microstorage.NewK(fmt.Sprintf(ItemKeyFormat, namespace, i))
+		if err != nil {
+			return microerror.Mask(err)
+		}
+		err = s.storage.Delete(ctx, k)
 		if microstorage.IsNotFound(err) {
 			// In case there is no item anymore, we just go ahead to delete the rest
 			// of the data.
 		} else if err != nil {
 			return microerror.Mask(err)
 		}
-		err = s.storage.Delete(ctx, fmt.Sprintf(IDKeyFormat, namespace, ID, i))
+		k, err = microstorage.NewK(fmt.Sprintf(IDKeyFormat, namespace, ID, i))
+		if err != nil {
+			return microerror.Mask(err)
+		}
+		err = s.storage.Delete(ctx, k)
 		if microstorage.IsNotFound(err) {
 			// In case there is no item anymore, we just go ahead to delete the rest
 			// of the data.
@@ -227,7 +262,11 @@ func (s *Service) delete(ctx context.Context, namespace, ID string, items []int)
 		}
 	}
 
-	err := s.storage.Delete(ctx, fmt.Sprintf(IDListKeyFormat, namespace, ID))
+	k, err := microstorage.NewK(fmt.Sprintf(IDListKeyFormat, namespace, ID))
+	if err != nil {
+		return microerror.Mask(err)
+	}
+	err = s.storage.Delete(ctx, k)
 	if microstorage.IsNotFound(err) {
 		// In case there is no item anymore, we just go ahead to delete the rest of
 		// the data.
@@ -235,7 +274,11 @@ func (s *Service) delete(ctx context.Context, namespace, ID string, items []int)
 		return microerror.Mask(err)
 	}
 
-	list, err := s.storage.List(ctx, fmt.Sprintf(ItemListKeyFormat, namespace))
+	k, err = microstorage.NewK(fmt.Sprintf(ItemListKeyFormat, namespace))
+	if err != nil {
+		return microerror.Mask(err)
+	}
+	list, err := s.storage.List(ctx, k)
 	if microstorage.IsNotFound(err) {
 		// In case there is no item anymore, we just go ahead to delete the complete
 		// item list key and latest item key.
@@ -243,14 +286,22 @@ func (s *Service) delete(ctx context.Context, namespace, ID string, items []int)
 		return microerror.Mask(err)
 	}
 	if len(list) == 0 {
-		err := s.storage.Delete(ctx, fmt.Sprintf(ItemListKeyFormat, namespace))
+		k, err := microstorage.NewK(fmt.Sprintf(ItemListKeyFormat, namespace))
+		if err != nil {
+			return microerror.Mask(err)
+		}
+		err = s.storage.Delete(ctx, k)
 		if microstorage.IsNotFound(err) {
 			// In case there is no item anymore, we just go ahead to delete the rest
 			// of the data.
 		} else if err != nil {
 			return microerror.Mask(err)
 		}
-		err = s.storage.Delete(ctx, fmt.Sprintf(LatestKeyFormat, namespace))
+		k, err = microstorage.NewK(fmt.Sprintf(LatestKeyFormat, namespace))
+		if err != nil {
+			return microerror.Mask(err)
+		}
+		err = s.storage.Delete(ctx, k)
 		if microstorage.IsNotFound(err) {
 			// In case there is no item anymore, we just go ahead to delete the rest
 			// of the data.
@@ -331,13 +382,13 @@ func containsInt(list []int, item int) bool {
 	return false
 }
 
-// stringsToInts takes a list of strings and returns the equivalent list of
-// ints.
-func stringsToInts(list []string) ([]int, error) {
+// valuesToInts takes a list of key-values and returns the values list
+// converted to ints.
+func valuesToInts(kvs []microstorage.KV) ([]int, error) {
 	var converted []int
 
-	for _, l := range list {
-		s, err := strconv.Atoi(l)
+	for _, kv := range kvs {
+		s, err := strconv.Atoi(kv.Val())
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}

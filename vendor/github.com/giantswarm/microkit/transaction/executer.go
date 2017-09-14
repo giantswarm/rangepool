@@ -9,8 +9,8 @@ import (
 
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
+	"github.com/giantswarm/microstorage"
 
-	microstorage "github.com/giantswarm/microkit/storage"
 	transactionid "github.com/giantswarm/microkit/transaction/context/id"
 )
 
@@ -50,51 +50,21 @@ var DefaultTrialEncoder = func(v interface{}) ([]byte, error) {
 type ExecuterConfig struct {
 	// Dependencies.
 	Logger  micrologger.Logger
-	Storage microstorage.Service
+	Storage microstorage.Storage
 }
 
 // DefaultExecuterConfig provides a default configuration to create a new
 // executer by best effort.
 func DefaultExecuterConfig() ExecuterConfig {
-	var err error
-
-	var loggerService micrologger.Logger
-	{
-		loggerConfig := micrologger.DefaultConfig()
-		loggerService, err = micrologger.New(loggerConfig)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	var storageService microstorage.Service
-	{
-		storageConfig := microstorage.DefaultConfig()
-		storageService, err = microstorage.New(storageConfig)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	config := ExecuterConfig{
+	return ExecuterConfig{
 		// Dependencies.
-		Logger:  loggerService,
-		Storage: storageService,
+		Logger:  nil,
+		Storage: nil,
 	}
-
-	return config
 }
 
 // NewExecuter creates a new configured executer.
 func NewExecuter(config ExecuterConfig) (Executer, error) {
-	// Dependencies.
-	if config.Logger == nil {
-		return nil, microerror.Maskf(invalidConfigError, "logger must not be empty")
-	}
-	if config.Storage == nil {
-		return nil, microerror.Maskf(invalidConfigError, "storage must not be empty")
-	}
-
 	newExecuter := &executer{
 		// Dependencies.
 		logger:  config.Logger,
@@ -107,7 +77,7 @@ func NewExecuter(config ExecuterConfig) (Executer, error) {
 type executer struct {
 	// Dependencies.
 	logger  micrologger.Logger
-	storage microstorage.Service
+	storage microstorage.Storage
 }
 
 func (e *executer) Execute(ctx context.Context, config ExecuteConfig) error {
@@ -140,7 +110,10 @@ func (e *executer) Execute(ctx context.Context, config ExecuteConfig) error {
 	// to execute the configured replay, if any. If there was no trial for the
 	// given transaction registered yet, we are executing the trial.
 	{
-		key := transactionKey("transaction", transactionID, "trial", config.TrialID)
+		key, err := microstorage.NewK(transactionKey("transaction", transactionID, "trial", config.TrialID))
+		if err != nil {
+			return microerror.Mask(err)
+		}
 		exists, err := e.storage.Exists(ctx, key)
 		if err != nil {
 			return microerror.Mask(err)
@@ -155,8 +128,11 @@ func (e *executer) Execute(ctx context.Context, config ExecuteConfig) error {
 			}
 
 			var notFound bool
-			key := transactionKey("transaction", transactionID, "trial", config.TrialID, "result")
-			val, err := e.storage.Search(ctx, key)
+			key, err := microstorage.NewK(transactionKey("transaction", transactionID, "trial", config.TrialID, "result"))
+			if err != nil {
+				return microerror.Mask(err)
+			}
+			kv, err := e.storage.Search(ctx, key)
 			if microstorage.IsNotFound(err) {
 				notFound = true
 			} else if err != nil {
@@ -169,7 +145,7 @@ func (e *executer) Execute(ctx context.Context, config ExecuteConfig) error {
 			// as trial output.
 			var input interface{}
 			if !notFound {
-				input, err = config.ReplayDecoder([]byte(val))
+				input, err = config.ReplayDecoder([]byte(kv.Val()))
 				if err != nil {
 					return microerror.Mask(err)
 				}
@@ -204,14 +180,22 @@ func (e *executer) Execute(ctx context.Context, config ExecuteConfig) error {
 		}
 		if b != nil {
 			rVal := string(b)
-			err = e.storage.Create(ctx, rKey, rVal)
+			kv, err := microstorage.NewKV(rKey, rVal)
+			if err != nil {
+				return microerror.Mask(err)
+			}
+			err = e.storage.Put(ctx, kv)
 			if err != nil {
 				return microerror.Mask(err)
 			}
 		}
 
 		tKey := transactionKey("transaction", transactionID, "trial", config.TrialID)
-		err = e.storage.Create(ctx, tKey, "{}")
+		kv, err := microstorage.NewKV(tKey, "{}")
+		if err != nil {
+			return microerror.Mask(err)
+		}
+		err = e.storage.Put(ctx, kv)
 		if err != nil {
 			return microerror.Mask(err)
 		}
