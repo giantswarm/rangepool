@@ -36,6 +36,12 @@ const (
 	// ItemListKeyFormat is the format string used to create a storage key to
 	// lookup the list of items of a namespace. See also ItemKeyFormat.
 	ItemListKeyFormat = "range-pool/%s/item"
+	// ItemSearchKeyFormat is the format string used to create a storage key to
+	// search for all items associated with an ID.
+	//
+	//     range-pool/${namespace1}/id/${id1}/item
+	//
+	ItemSearchKeyFormat = "range-pool/%s/id/%s/item"
 	// LatestKeyFormat is used to create a storage key to persist the latest item
 	// used.
 	//
@@ -188,6 +194,30 @@ func (s *Service) Delete(ctx context.Context, namespace, ID string) error {
 	}
 
 	return nil
+}
+
+func (s *Service) Search(ctx context.Context, namespace, ID string) ([]int, error) {
+	var used []int
+	{
+		k, err := microstorage.NewK(fmt.Sprintf(ItemSearchKeyFormat, namespace, ID))
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+		kv, err := s.storage.List(ctx, k)
+		if microstorage.IsNotFound(err) || len(kv) == 0 {
+			return nil, microerror.Maskf(itemsNotFoundError, "no items in namespace '%s' for ID '%s'", namespace, ID)
+		} else if err != nil {
+			return nil, microerror.Mask(err)
+		}
+		used, err = valuesToInts(kv)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	sort.Ints(used)
+
+	return used, nil
 }
 
 // create is used to persist new items.

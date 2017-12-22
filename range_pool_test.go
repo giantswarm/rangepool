@@ -272,6 +272,109 @@ func Test_Service_Create_NumTwo(t *testing.T) {
 	}
 }
 
+func Test_Service_Search(t *testing.T) {
+	// Create a new storage and service.
+	var err error
+	var newService *Service
+	var newStorage microstorage.Storage
+	{
+		newStorage, err = memory.New(memory.DefaultConfig())
+		if err != nil {
+			t.Fatal("expected", nil, "got", err)
+		}
+
+		config := DefaultConfig()
+		config.Logger = microloggertest.New()
+		config.Storage = newStorage
+		newService, err = New(config)
+		if err != nil {
+			t.Fatal("expected", nil, "got", err)
+		}
+	}
+
+	// Prepare the test variables.
+	ctx := context.TODO()
+	namespace := "test-namespace"
+	ID := "test-id"
+	num := 2
+	min := 2
+	max := 9
+
+	{
+		_, err := newService.Create(ctx, namespace, ID, num, min, max)
+		if err != nil {
+			t.Fatal("expected", nil, "got", err)
+		}
+
+		items, err := newService.Search(ctx, namespace, ID)
+		if err != nil {
+			t.Fatal("expected", nil, "got", err)
+		}
+
+		l := len(items)
+		if l != 2 {
+			t.Fatal("expected", 2, "got", l)
+		}
+
+		i1 := items[0]
+		if i1 != 2 {
+			t.Fatal("expected", 2, "got", i1)
+		}
+		i2 := items[1]
+		if i2 != 3 {
+			t.Fatal("expected", 3, "got", i2)
+		}
+	}
+
+	{
+		_, err := newService.Create(ctx, namespace, ID, num, min, max)
+		if err != nil {
+			t.Fatal("expected", nil, "got", err)
+		}
+
+		items, err := newService.Search(ctx, namespace, ID)
+		if err != nil {
+			t.Fatal("expected", nil, "got", err)
+		}
+
+		l := len(items)
+		if l != 4 {
+			t.Fatal("expected", 4, "got", l)
+		}
+
+		i1 := items[0]
+		if i1 != 2 {
+			t.Fatal("expected", 2, "got", i1)
+		}
+		i2 := items[1]
+		if i2 != 3 {
+			t.Fatal("expected", 3, "got", i2)
+		}
+		i3 := items[2]
+		if i3 != 4 {
+			t.Fatal("expected", 4, "got", i3)
+		}
+		i4 := items[3]
+		if i4 != 5 {
+			t.Fatal("expected", 5, "got", i4)
+		}
+	}
+
+	{
+		err := newService.Delete(ctx, namespace, ID)
+		if err != nil {
+			t.Fatal("expected", nil, "got", err)
+		}
+	}
+
+	{
+		_, err := newService.Search(ctx, namespace, ID)
+		if !IsItemsNotFound(err) {
+			t.Fatal("expected", true, "got", false)
+		}
+	}
+}
+
 func Test_Service_Create_NumTwo_DifferentIDs(t *testing.T) {
 	// Create a new storage and service.
 	var err error
