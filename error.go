@@ -24,3 +24,10 @@ var invalidConfigError = microerror.New("invalid config")
 func IsInvalidConfig(err error) bool {
 	return microerror.Cause(err) == invalidConfigError
 }
+
+var itemsNotFoundError = microerror.New("items not found")
+
+// IsItemsNotFound asserts itemsNotFoundError.
+func IsItemsNotFound(err error) bool {
+	return microerror.Cause(err) == itemsNotFoundError
+}
