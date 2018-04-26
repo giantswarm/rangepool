@@ -322,19 +322,7 @@ func (s *Service) delete(ctx context.Context, namespace, ID string, items []int)
 		}
 		err = s.storage.Delete(ctx, k)
 		if microstorage.IsNotFound(err) {
-			// In case there is no item anymore, we just go ahead to delete the rest
-			// of the data.
-		} else if err != nil {
-			return microerror.Mask(err)
-		}
-		k, err = microstorage.NewK(fmt.Sprintf(LatestKeyFormat, namespace))
-		if err != nil {
-			return microerror.Mask(err)
-		}
-		err = s.storage.Delete(ctx, k)
-		if microstorage.IsNotFound(err) {
-			// In case there is no item anymore, we just go ahead to delete the rest
-			// of the data.
+			// Fall through in case what we want to remove is already gone.
 		} else if err != nil {
 			return microerror.Mask(err)
 		}

@@ -82,8 +82,10 @@ func Test_Service_Create_NumOne(t *testing.T) {
 		}
 	}
 
-	// Fetch a new item. This should be the same as the very first one of the test
-	// because we deleted all references created so far in the former step.
+	// Fetch a new item. This should be based on the last item we created. So the
+	// last item was 3, which implies the item we expect now is 4. We do not want
+	// to purge the last item pointer to rotate through the available options all
+	// the time to be more efficient in certain edge cases.
 	{
 		items, err := newService.Create(ctx, namespace, ID, num, min, max)
 		if err != nil {
@@ -96,8 +98,8 @@ func Test_Service_Create_NumOne(t *testing.T) {
 		}
 
 		i1 := items[0]
-		if i1 != 2 {
-			t.Fatal("expected", 2, "got", i1)
+		if i1 != 4 {
+			t.Fatal("expected", 4, "got", i1)
 		}
 	}
 }
@@ -163,6 +165,127 @@ func Test_Service_Create_Num3_CapacityReached(t *testing.T) {
 		_, err := newService.Create(ctx, namespace, ID, num, min, max)
 		if !IsCapacityReached(err) {
 			t.Fatal("expected", true, "got", false)
+		}
+	}
+}
+
+func Test_Service_Create_NumThree_Rotate(t *testing.T) {
+	// Create a new storage and service.
+	var newService *Service
+	{
+		newStorage, err := memory.New(memory.DefaultConfig())
+		if err != nil {
+			t.Fatal("expected", nil, "got", err)
+		}
+
+		config := DefaultConfig()
+		config.Logger = microloggertest.New()
+		config.Storage = newStorage
+		newService, err = New(config)
+		if err != nil {
+			t.Fatal("expected", nil, "got", err)
+		}
+	}
+
+	// Prepare the test variables.
+	ctx := context.TODO()
+	namespace := "test-namespace"
+	num := 3
+	min := 2
+	max := 7
+
+	// We start at the minimum boundary and allocate 2, 3 and 4 for the first ID.
+	{
+		ID := "test-id-1"
+		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		if err != nil {
+			t.Fatal("expected", nil, "got", err)
+		}
+
+		l := len(items)
+		if l != 3 {
+			t.Fatal("expected", 3, "got", l)
+		}
+
+		i1 := items[0]
+		if i1 != 2 {
+			t.Fatal("expected", 2, "got", i1)
+		}
+		i2 := items[1]
+		if i2 != 3 {
+			t.Fatal("expected", 3, "got", i2)
+		}
+		i3 := items[2]
+		if i3 != 4 {
+			t.Fatal("expected", 4, "got", i3)
+		}
+	}
+
+	// We continue with the last known pointer and allocate 5, 6 and 7 for the
+	// second ID. Now we also reached the max boundary. In case any items are
+	// still free we expect rangepool to rotate and start from the minimum
+	// boundary again.
+	{
+		ID := "test-id-2"
+		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		if err != nil {
+			t.Fatal("expected", nil, "got", err)
+		}
+
+		l := len(items)
+		if l != 3 {
+			t.Fatal("expected", 3, "got", l)
+		}
+
+		i1 := items[0]
+		if i1 != 5 {
+			t.Fatal("expected", 5, "got", i1)
+		}
+		i2 := items[1]
+		if i2 != 6 {
+			t.Fatal("expected", 6, "got", i2)
+		}
+		i3 := items[2]
+		if i3 != 7 {
+			t.Fatal("expected", 7, "got", i3)
+		}
+	}
+
+	// We delete the allocated items of the first ID to make rangepool rotate and
+	// start allocating from the minimum boundary.
+	{
+		ID := "test-id-1"
+		err := newService.Delete(ctx, namespace, ID)
+		if err != nil {
+			t.Fatal("expected", nil, "got", err)
+		}
+	}
+
+	// We expect item allocations starting from the minimum boundaries because we
+	// filled the stack and freed the start of the available items in the pool.
+	{
+		ID := "test-id-3"
+		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		if err != nil {
+			t.Fatal("expected", nil, "got", err)
+		}
+
+		l := len(items)
+		if l != 3 {
+			t.Fatal("expected", 3, "got", l)
+		}
+
+		i1 := items[0]
+		if i1 != 2 {
+			t.Fatal("expected", 2, "got", i1)
+		}
+		i2 := items[1]
+		if i2 != 3 {
+			t.Fatal("expected", 3, "got", i2)
+		}
+		i3 := items[2]
+		if i3 != 4 {
+			t.Fatal("expected", 4, "got", i3)
 		}
 	}
 }
@@ -248,8 +371,10 @@ func Test_Service_Create_NumTwo(t *testing.T) {
 		}
 	}
 
-	// Fetch the new items. These should be the same as the very first ones of the
-	// test because we deleted all references created so far in the former step.
+	// Fetch a new items. These should be based on the last items we created. So
+	// the last items were 4 and 5, which implies the items we expect now are 6
+	// and 7. We do not want to purge the last item pointer to rotate through the
+	// available options all the time to be more efficient in certain edge cases.
 	{
 		items, err := newService.Create(ctx, namespace, ID, num, min, max)
 		if err != nil {
@@ -262,12 +387,12 @@ func Test_Service_Create_NumTwo(t *testing.T) {
 		}
 
 		i1 := items[0]
-		if i1 != 2 {
-			t.Fatal("expected", 2, "got", i1)
+		if i1 != 6 {
+			t.Fatal("expected", 6, "got", i1)
 		}
 		i2 := items[1]
-		if i2 != 3 {
-			t.Fatal("expected", 3, "got", i2)
+		if i2 != 7 {
+			t.Fatal("expected", 7, "got", i2)
 		}
 	}
 }
@@ -456,9 +581,10 @@ func Test_Service_Create_NumTwo_DifferentIDs(t *testing.T) {
 			}
 		}
 
-		// Fetch the new items. These should be the same as the very first ones of
-		// the test because we deleted all references created so far in the former
-		// step.
+		// Fetch a new items. These should be based on the last items we created. So
+		// the last items were 4 and 5, which implies the items we expect now are 6
+		// and 7. We do not want to purge the last item pointer to rotate through the
+		// available options all the time to be more efficient in certain edge cases.
 		{
 			items, err := newService.Create(ctx, namespace, ID, num, min, max)
 			if err != nil {
@@ -471,12 +597,12 @@ func Test_Service_Create_NumTwo_DifferentIDs(t *testing.T) {
 			}
 
 			i1 := items[0]
-			if i1 != 2 {
-				t.Fatal("expected", 2, "got", i1)
+			if i1 != 6 {
+				t.Fatal("expected", 6, "got", i1)
 			}
 			i2 := items[1]
-			if i2 != 3 {
-				t.Fatal("expected", 3, "got", i2)
+			if i2 != 7 {
+				t.Fatal("expected", 7, "got", i2)
 			}
 		}
 	}
