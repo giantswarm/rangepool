@@ -35,7 +35,6 @@ func Test_Service_Create_NumOne(t *testing.T) {
 
 	// Prepare the test variables.
 	ctx := context.TODO()
-	ID := "test-id"
 	num := 1
 	min := 2
 	max := 9
@@ -43,7 +42,7 @@ func Test_Service_Create_NumOne(t *testing.T) {
 	// Execute and assert the actually tested functionality. At first we fetch a
 	// new item.
 	{
-		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		items, err := newService.Create(ctx, namespace, "test-id", num, min, max)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -61,7 +60,7 @@ func Test_Service_Create_NumOne(t *testing.T) {
 
 	// Fetch another item.
 	{
-		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		items, err := newService.Create(ctx, namespace, "test-id", num, min, max)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -79,7 +78,7 @@ func Test_Service_Create_NumOne(t *testing.T) {
 
 	// Delete the namespaced items for the test ID.
 	{
-		err := newService.Delete(ctx, namespace, ID)
+		err := newService.Delete(ctx, namespace, "test-id")
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -90,7 +89,7 @@ func Test_Service_Create_NumOne(t *testing.T) {
 	// to purge the last item pointer to rotate through the available options all
 	// the time to be more efficient in certain edge cases.
 	{
-		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		items, err := newService.Create(ctx, namespace, "test-id", num, min, max)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
