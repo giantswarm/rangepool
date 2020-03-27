@@ -7,8 +7,15 @@ and this project's packages adheres to [Semantic Versioning](http://semver.org/s
 
 ## [Unreleased]
 
+## [v0.2.0]
+
 ### Changed
 
 - Switch from dep to go modules.
+- Applying architect orb.
+
+
+[Unreleased]: https://github.com/giantswarm/rangepool/compare/v0.2.0..HEAD
+[v0.2.0]: https://github.com/giantswarm/rangepool/releases/tag/v0.2.0
 
 
