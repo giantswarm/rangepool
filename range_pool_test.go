@@ -9,6 +9,10 @@ import (
 	"github.com/giantswarm/microstorage/memory"
 )
 
+const (
+	namespace = "test-namespace"
+)
+
 func Test_Service_Create_NumOne(t *testing.T) {
 	// Create a new storage and service.
 	var err error
@@ -31,8 +35,6 @@ func Test_Service_Create_NumOne(t *testing.T) {
 
 	// Prepare the test variables.
 	ctx := context.TODO()
-	namespace := "test-namespace"
-	ID := "test-id"
 	num := 1
 	min := 2
 	max := 9
@@ -40,7 +42,7 @@ func Test_Service_Create_NumOne(t *testing.T) {
 	// Execute and assert the actually tested functionality. At first we fetch a
 	// new item.
 	{
-		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		items, err := newService.Create(ctx, namespace, "test-id", num, min, max)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -58,7 +60,7 @@ func Test_Service_Create_NumOne(t *testing.T) {
 
 	// Fetch another item.
 	{
-		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		items, err := newService.Create(ctx, namespace, "test-id", num, min, max)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -76,7 +78,7 @@ func Test_Service_Create_NumOne(t *testing.T) {
 
 	// Delete the namespaced items for the test ID.
 	{
-		err := newService.Delete(ctx, namespace, ID)
+		err := newService.Delete(ctx, namespace, "test-id")
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -87,7 +89,7 @@ func Test_Service_Create_NumOne(t *testing.T) {
 	// to purge the last item pointer to rotate through the available options all
 	// the time to be more efficient in certain edge cases.
 	{
-		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		items, err := newService.Create(ctx, namespace, "test-id", num, min, max)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -126,8 +128,6 @@ func Test_Service_Create_Num3_CapacityReached(t *testing.T) {
 
 	// Prepare the test variables.
 	ctx := context.TODO()
-	namespace := "test-namespace"
-	ID := "test-id"
 	num := 3
 	min := 2
 	max := 7
@@ -135,7 +135,7 @@ func Test_Service_Create_Num3_CapacityReached(t *testing.T) {
 	// Execute and assert the actually tested functionality. At first we fetch the
 	// new items.
 	{
-		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		items, err := newService.Create(ctx, namespace, "test-id", num, min, max)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -148,7 +148,7 @@ func Test_Service_Create_Num3_CapacityReached(t *testing.T) {
 
 	// Fetch items again. This should saturate our configured capacity.
 	{
-		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		items, err := newService.Create(ctx, namespace, "test-id", num, min, max)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -162,7 +162,7 @@ func Test_Service_Create_Num3_CapacityReached(t *testing.T) {
 	// Fetch new items again. This should throw an error since the capacity of
 	// available items should be reached.
 	{
-		_, err := newService.Create(ctx, namespace, ID, num, min, max)
+		_, err := newService.Create(ctx, namespace, "test-id", num, min, max)
 		if !IsCapacityReached(err) {
 			t.Fatal("expected", true, "got", false)
 		}
@@ -189,15 +189,13 @@ func Test_Service_Create_NumThree_Rotate(t *testing.T) {
 
 	// Prepare the test variables.
 	ctx := context.TODO()
-	namespace := "test-namespace"
 	num := 3
 	min := 2
 	max := 7
 
 	// We start at the minimum boundary and allocate 2, 3 and 4 for the first ID.
 	{
-		ID := "test-id-1"
-		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		items, err := newService.Create(ctx, namespace, "test-id-1", num, min, max)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -226,8 +224,7 @@ func Test_Service_Create_NumThree_Rotate(t *testing.T) {
 	// still free we expect rangepool to rotate and start from the minimum
 	// boundary again.
 	{
-		ID := "test-id-2"
-		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		items, err := newService.Create(ctx, namespace, "test-id-2", num, min, max)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -254,8 +251,7 @@ func Test_Service_Create_NumThree_Rotate(t *testing.T) {
 	// We delete the allocated items of the first ID to make rangepool rotate and
 	// start allocating from the minimum boundary.
 	{
-		ID := "test-id-1"
-		err := newService.Delete(ctx, namespace, ID)
+		err := newService.Delete(ctx, namespace, "test-id-1")
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -264,8 +260,7 @@ func Test_Service_Create_NumThree_Rotate(t *testing.T) {
 	// We expect item allocations starting from the minimum boundaries because we
 	// filled the stack and freed the start of the available items in the pool.
 	{
-		ID := "test-id-3"
-		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		items, err := newService.Create(ctx, namespace, "test-id-3", num, min, max)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -312,8 +307,6 @@ func Test_Service_Create_NumTwo(t *testing.T) {
 
 	// Prepare the test variables.
 	ctx := context.TODO()
-	namespace := "test-namespace"
-	ID := "test-id"
 	num := 2
 	min := 2
 	max := 9
@@ -321,7 +314,7 @@ func Test_Service_Create_NumTwo(t *testing.T) {
 	// Execute and assert the actually tested functionality. At first we fetch the
 	// new items.
 	{
-		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		items, err := newService.Create(ctx, namespace, "test-id", num, min, max)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -343,7 +336,7 @@ func Test_Service_Create_NumTwo(t *testing.T) {
 
 	// Fetch the next items.
 	{
-		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		items, err := newService.Create(ctx, namespace, "test-id", num, min, max)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -365,7 +358,7 @@ func Test_Service_Create_NumTwo(t *testing.T) {
 
 	// Delete the namespaced items for the test ID.
 	{
-		err := newService.Delete(ctx, namespace, ID)
+		err := newService.Delete(ctx, namespace, "test-id")
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -376,7 +369,7 @@ func Test_Service_Create_NumTwo(t *testing.T) {
 	// and 7. We do not want to purge the last item pointer to rotate through the
 	// available options all the time to be more efficient in certain edge cases.
 	{
-		items, err := newService.Create(ctx, namespace, ID, num, min, max)
+		items, err := newService.Create(ctx, namespace, "test-id", num, min, max)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
@@ -419,7 +412,6 @@ func Test_Service_Search(t *testing.T) {
 
 	// Prepare the test variables.
 	ctx := context.TODO()
-	namespace := "test-namespace"
 	ID := "test-id"
 	num := 2
 	min := 2
